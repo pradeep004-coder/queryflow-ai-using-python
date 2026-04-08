@@ -87,6 +87,7 @@ export default function Home() {
   }
 
   const askQuestion = async () => {
+<<<<<<< HEAD
 
     if (isLoadingAns) return;
     if (chat.length >= 5 && !isLoggedIn) {
@@ -95,6 +96,10 @@ export default function Home() {
     }
     setIsLoadingAns(true);
 
+=======
+    if (!isLoggedIn) return toast.warning("Please login or signup to enable service!!");
+    
+>>>>>>> 1ead725ce960d438881e4de99cbe83417fb7df34
     const trimmed = query.trim();
     if (!trimmed) return;
 
