@@ -8,9 +8,9 @@ import { toast } from "react-toastify";
 import DateBadge from "./DateBadge";
 import { MdOutlineContentCopy } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
-import { parseResponse } from "@/utils/responseParser";
+import { parseAnswer } from "@/utils/helper";
 import { ChatContext } from "@/context/Context";
-import { Backend_API } from "@/constants/env";
+import { Backend_API, Get_Chats_API } from "@/constants/env";
 import { FaArrowDown } from "react-icons/fa";
 
 
@@ -22,10 +22,11 @@ function ChatSection({ elementsRef }) {
         isLoggedIn,
         canLoadMore,
         setCanLoadMore,
-        isAnsLoading
+        isLoadingAns,
+        isLoadingChats,
+        setIsLoadingChats
     } = useContext(ChatContext);
 
-    const [loading, setLoading] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const [daySeparators, setDaySeparators] = useState([]);
     const [visibleDate, setVisibleDate] = useState("");
@@ -101,7 +102,7 @@ function ChatSection({ elementsRef }) {
     /* -------------------- Load More -------------------- */
 
     const handleLoadMore = async () => {
-        if (!isLoggedIn || !canLoadMore || loading) return;
+        if (!isLoggedIn || !canLoadMore || isLoadingChats) return;
 
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -112,10 +113,10 @@ function ChatSection({ elementsRef }) {
         //  save current scroll height
         prevScrollHeightRef.current = container.scrollHeight;
 
-        setLoading(true);
+        setIsLoadingChats(true);
 
         try {
-            const res = await fetch(`${Backend_API}/getchats/${chat.length}`, {
+            const res = await fetch(Get_Chats_API + `/${chat.length}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -135,7 +136,7 @@ function ChatSection({ elementsRef }) {
             toast.error("Could not load chats!");
             setCanLoadMore(false);
         } finally {
-            setLoading(false);
+            setIsLoadingChats(false);
         }
     };
 
@@ -157,7 +158,7 @@ function ChatSection({ elementsRef }) {
     /* -------------------- Copy Answer -------------------- */
 
     const handleCopy = async (text) => {
-        if (isAnsLoading)
+        if (isLoadingAns)
             return toast.warning("Please wait for the answer to load!");
 
         try {
@@ -206,7 +207,7 @@ function ChatSection({ elementsRef }) {
                 setShowScrollBtn(false);
             }, 1500);
         }
-    };
+    }
 
     const scrollToBottom = () => {
         if (!chatContainerRef.current) return;
@@ -223,7 +224,7 @@ function ChatSection({ elementsRef }) {
             <DateBadge visibleDate={visibleDate} isDateVisible={isDateVisible} />
 
             <div
-                className="h-[75vh] max-w-full lg:container mx-auto flex flex-col p-3 overflow-y-auto overflow-x-hidden text-zinc-300 scrollbar"
+                className="h-[75vh] max-w-full lg:px-12 flex flex-col p-3 overflow-y-auto overflow-x-hidden text-zinc-300 scrollbar"
                 ref={chatContainerRef}
                 onScroll={handleScroll}
             >
@@ -233,7 +234,7 @@ function ChatSection({ elementsRef }) {
                             className="bg-zinc-900 rounded-xl shadow-lg px-2 py-1"
                             onClick={handleLoadMore}
                         >
-                            {loading ? (
+                            {isLoadingChats ? (
                                 <ClipLoader size={16} color="grey" />
                             ) : (
                                 "Load More"
@@ -246,8 +247,9 @@ function ChatSection({ elementsRef }) {
                     <div
                         key={i}
                         data-index={i}
-                        className="mb-5"
                         ref={(el) => (elementsRef.current[i] = el)}
+                        className = {`${(chatItem === chat[chat.length - 1] && !chatItem.answer) ? "h-[60vh]" : ""}
+                        ${chatItem === chat[chat.length - 1] ? "min-h-[60vh]" : ""}`}
                     >
                         {daySeparators.includes(i) && (
                             <div className="mx-auto w-fit px-2 bg-zinc-700 rounded-lg">
@@ -262,7 +264,7 @@ function ChatSection({ elementsRef }) {
 
                         <Collapsible>
                             <ul className="max-w-full mt-2">
-                                {!chatItem.answer && isAnsLoading && i === chat.length - 1 ? (
+                                {!chatItem.answer && isLoadingAns && i === chat.length - 1 ? (
                                     <div className="text-zinc-400 animate-dots">
                                         Answering
                                         <span className="dot-1">.</span>
@@ -271,7 +273,7 @@ function ChatSection({ elementsRef }) {
                                     </div>
                                 ) : (
                                     chatItem?.answer &&
-                                    parseResponse(chatItem.answer).map((item, index) => (
+                                    parseAnswer(chatItem.answer).map((item, index) => (
                                         <li key={index}>
                                             <Answers
                                                 ansType={item.type}
@@ -288,7 +290,7 @@ function ChatSection({ elementsRef }) {
                             </ul>
                         </Collapsible>
 
-                        {!isAnsLoading && chatItem.answer && (
+                        {!isLoadingAns && chatItem.answer && (
                             <button
                                 type="button"
                                 className="p-2"
@@ -302,7 +304,7 @@ function ChatSection({ elementsRef }) {
                                 onClick={scrollToBottom}
                                 className="
                                     fixed bottom-38 left-1/2 -translate-x-1/2
-                                    bg-zinc-800 hover:bg-zinc-700
+                                    bg-black/75 shadow-md hover:bg-zinc-700
                                     text-white p-3 rounded-full
                                     shadow-lg z-50
                                     transition-opacity duration-300

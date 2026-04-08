@@ -7,28 +7,27 @@ import WelcomeContent from '../components/WelcomeContent';
 import InputSection from '../components/InputSection';
 import { toast } from 'react-toastify';
 import { ChatContext } from '@/context/Context';
-import { Backend_API } from '@/constants/env';
+import { Generate_Reasponse_API, Get_Chats_API } from '@/constants/env';
 
 export default function Home() {
   const [query, setQuery] = useState('');
   const [showSidebar, setShowSidebar] = useState(false);
-  const [isPosting, setIsPosting] = useState(false);
-  const [isLoadingChats, setIsLoadingChats] = useState(false);
   const scrollContainerRef = useRef(null);
   const elementsRef = useRef([]);
   const textareaRef = useRef(null);
-  const { chat, setChat, isLoggedIn, setIsLoggedIn, setCanLoadMore, setIsAnsLoading } = useContext(ChatContext);
+  const { chat, setChat, isLoggedIn, setIsLoggedIn, setCanLoadMore, isLoadingChats, setIsLoadingChats, isLoadingAns, setIsLoadingAns } = useContext(ChatContext);
 
-  
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     const loadChats = async () => {
+      if (isLoadingChats) return;
       try {
         setIsLoadingChats(true);
 
-        const response = await fetch(`${Backend_API}/getchats/0`, {
+        const response = await fetch(Get_Chats_API + `/${chat.length}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -46,7 +45,7 @@ export default function Home() {
 
         if (Array.isArray(data.chats)) {
           setChat(data.chats);
-          setCanLoadMore(data.canLoadMore);
+          setCanLoadMore(data.canLoadMore || false);
           setIsLoggedIn(true);
         }
 
@@ -88,6 +87,14 @@ export default function Home() {
   }
 
   const askQuestion = async () => {
+
+    if (isLoadingAns) return;
+    if (chat.length >= 5 && !isLoggedIn) {
+      toast.warn("Please login to continue!!");
+      return
+    }
+    setIsLoadingAns(true);
+
     const trimmed = query.trim();
     if (!trimmed) return;
 
@@ -95,33 +102,38 @@ export default function Home() {
       question: trimmed,
       timestamp: getCurrentTime(),
     }
-    let answer;
 
     setQuery('');
     setChat(prev => [...prev, newEntry]);
-    setIsAnsLoading(true);
-
-
-    try {
-      // keep scroll at bottom
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop =
-          scrollContainerRef.current.scrollHeight;
+    
+    // keep scroll at bottom
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop =
+      scrollContainerRef.current.clientHeight;
+    }
+    
+    
+    //------- 
+    setTimeout(() => {
+      const elementArray = elementsRef.current;
+      if (!elementArray.length) {
+        return;
       }
-
-      if (!isLoggedIn || isPosting) return;
-
-      setIsPosting(true);
+      elementArray[elementArray.length - 1].scrollIntoView({block: "end", behavior: "smooth"});
+      
+    }, 50);
+    
+    try {
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${Backend_API}/ai/ask`, {
+      const response = await fetch(Generate_Reasponse_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ ...newEntry }) // question, timestamp
+        body: JSON.stringify(newEntry) // question, timestamp
       });
 
       if (!response.ok) {
@@ -148,7 +160,7 @@ export default function Home() {
     } catch (error) {
       console.error("failed to post:", error);
       toast.error(error.message || "Oops!! Something went wrong.");
-      
+
       setChat(prev => {
         const updated = [...prev];
         const lastIndex = updated.length - 1;
@@ -163,8 +175,7 @@ export default function Home() {
         return updated;
       });
     } finally {
-      setIsPosting(false);
-      setIsAnsLoading(false);
+      setIsLoadingAns(false);
     }
   }
 

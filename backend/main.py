@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix="/api/auth")
-app.include_router(chat_router, prefix="/api")
+app.include_router(chat_router, prefix="/api/chat")
 
 @app.get("/")
 def root():

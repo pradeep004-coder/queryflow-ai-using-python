@@ -4,13 +4,12 @@ import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import ConfirmLogout from "./ConfirmLogout";
 import { SlLogin, SlLogout } from "react-icons/sl";
-import { Backend_API } from "@/constants/env";
+import { Backend_API, Get_Chats_API } from "@/constants/env";
 import { ChatContext } from "@/context/Context";
 
 
 function Sidebar({ denySidebar, elementsRef }) {
   const [isOpening, setIsOpening] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const {
@@ -19,7 +18,9 @@ function Sidebar({ denySidebar, elementsRef }) {
     chat,
     setChat,
     setCanLoadMore,
-    isAnsLoading, // ✅ assuming context me hai
+    isLoadingAns,
+    isLoadingChats,
+    setIsLoadingChats
   } = useContext(ChatContext);
 
   const router = useRouter();
@@ -40,7 +41,7 @@ function Sidebar({ denySidebar, elementsRef }) {
   /* ---------------- Load More Chats ---------------- */
 
   const handleLoadMore = async () => {
-    if (!isLoggedIn || !canLoadMore || loading) return;
+    if (!isLoggedIn || !canLoadMore || isLoadingChats) return;
 
     const token = localStorage.getItem("token");
     if (!token) {
@@ -48,12 +49,10 @@ function Sidebar({ denySidebar, elementsRef }) {
       return;
     }
 
-    setLoading(true);
+    setIsLoadingChats(true);
 
     try {
-      const res = await fetch(
-        `${Backend_API}/getchats/${chat.length}`,
-        {
+      const res = await fetch( Get_Chats_API + `/${chat.length}`,{
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -79,7 +78,7 @@ function Sidebar({ denySidebar, elementsRef }) {
       console.error(err);
       toast.error("Could not load chats!");
     } finally {
-      setLoading(false);
+      setIsLoadingChats(false);
     }
   };
 
@@ -122,7 +121,7 @@ function Sidebar({ denySidebar, elementsRef }) {
             <div
               key={index}
               className={`p-1 truncate cursor-pointer hover:bg-zinc-700
-                ${isAnsLoading && !item.answer ? "fade-text" : ""}`}
+                ${isLoadingAns && !item.answer ? "fade-text" : ""}`}
               onClick={() =>
                 elementsRef.current[
                   chat.length - index - 1
@@ -142,9 +141,9 @@ function Sidebar({ denySidebar, elementsRef }) {
               <button
                 className="bg-zinc-900 text-sm rounded-lg px-3 py-1"
                 onClick={handleLoadMore}
-                disabled={loading}
+                disabled={isLoadingChats}
               >
-                {loading ? (
+                {isLoadingChats ? (
                   <ClipLoader size={12} color="grey" />
                 ) : (
                   "Load More"

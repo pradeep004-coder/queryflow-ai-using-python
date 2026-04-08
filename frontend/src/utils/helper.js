@@ -1,8 +1,15 @@
-export const removeStars = (str) => {
-  return str.replace(/^\*+|\*+$/g, '');
+export const trimObjectValues = (obj) => {
+  const trimmedObj = {};
+
+  Object.keys(obj).forEach(key => {
+    const value = obj[key];
+    trimmedObj[key] = typeof value === "string" ? value.trim() : value;
+  });
+
+  return trimmedObj;
 }
 
-export const parseResponse = (str) => {
+export const parseAnswer = (str) => {
   const lines = str.split('\n');
   const result = [];
   let codeBuffer = [];
