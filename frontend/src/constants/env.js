@@ -1,5 +1,5 @@
-export const Backend_API = "http://127.0.0.1:8000/api"
-// "https://queryflow-backend-cq7z.onrender.com/api";
+// export const Backend_API = "http://127.0.0.1:8000/api"
+export const Backend_API = "https://queryflow-backend-cq7z.onrender.com/api";
 
 export const Login_API = Backend_API + "/auth/login";
 

@@ -11,7 +11,7 @@ function WelcomeContent() {
           select-none cursor-pointer
         "
       >
-        Welcome to QueryFlow<span className="text-blue-500">.ai</span>
+        Welcome to QueryFlow <span className="text-blue-500">AI</span>
       </h1>
 
       <p className="text-zinc-400 text-lg lg:text-xl select-none">

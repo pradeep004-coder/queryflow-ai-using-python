@@ -17,7 +17,7 @@ function Navbar({ openSidebar }) {
           }
         }
       >☰</button>
-      <h2 className='my-auto flex-grow text-lg text-center font-semibold select-none cursor-pointer'>QueryFlow.AI</h2>
+      <h2 className='my-auto flex-grow text-lg text-center font-semibold select-none cursor-pointer'>QueryFlow AI</h2>
       {!isLoggedIn && <button
         type="button"
         className="border-1 border-zinc-400 rounded-xl px-2 py-0 my-2"
