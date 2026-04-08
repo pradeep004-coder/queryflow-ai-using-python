@@ -58,12 +58,8 @@ def get_chats(offset: int, user: dict = Depends(get_current_user)):
         for c in cursor
    ]
 
-   print(type(chats[0]["timestamp"]))
-   for i in chats:
-       print(i["timestamp"])
 
    can_load_more = offset + PAGE_SIZE < total
-   print("canLoadMore: ", can_load_more)
    return {
         "chats": chats,
         "canLoadMore": can_load_more
