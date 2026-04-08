@@ -93,10 +93,11 @@ export default function Home() {
       toast.warn("Please login to continue!!");
       return
     }
+    
+    //if (!isLoggedIn) return toast.warning("Please login or signup to enable service!!");
+    
     setIsLoadingAns(true);
 
-    if (!isLoggedIn) return toast.warning("Please login or signup to enable service!!");
-    
     const trimmed = query.trim();
     if (!trimmed) return;
 
